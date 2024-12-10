@@ -1,0 +1,9 @@
+beautifulsoup4
+certifi
+charset-normalizer
+idna
+node-vm2
+requests
+soupsieve
+tqdm
+urllib3
