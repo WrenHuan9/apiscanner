@@ -5,6 +5,7 @@ import warnings
 from urllib.parse import urlparse
 from process import ReadConfig
 from common.utils import Utils
+from ParseJs import dealJs
 
 
 class DownloadJs():
@@ -58,7 +59,8 @@ class DownloadJs():
                     self.jsRealPaths.remove(jsRealPath)
         return self.jsRealPaths
 
-    def downloadJs(self, tag, host, spiltId):  # 下载js文件
+    def downloadJs(self, tag, host, spiltId, jsPaths):  # 下载js文件
+        # todo 404的count
         if self.options.cookie is not None:
             header = {
                 'User-Agent': random.choice(self.UserAgent),
@@ -80,18 +82,28 @@ class DownloadJs():
             print(Utils().tellTime() + "js黑名单函数正常")
         except Exception as e:
             print("[Err] %s" % e)
+        count = 0
         for jsRealPath in self.jsRealPaths:
             jsFilename = Utils().getFilename(jsRealPath)
             jsTag = Utils().creatTag(6)
             print(Utils().tellTime() + Utils().getMyWord("{downloading}") + jsFilename)
             sslFlag = int(self.options.ssl_flag)
             if sslFlag == 1:
-                jsFileData = requests.get(url=jsRealPath, headers=header, proxies=self.proxy_data, timeout=30, verify=False).content
+                jsFileResponse = requests.get(url=jsRealPath, headers=header, proxies=self.proxy_data, timeout=30,
+                                              verify=False)
             else:
-                jsFileData = requests.get(url=jsRealPath, proxies=self.proxy_data, timeout=30, headers=header).content
-            with open("tmp" + os.sep + tag + "_" + host + os.sep + jsTag + "." + jsFilename, "wb") as js_file:
-                js_file.write(jsFileData)
-                js_file.close()
+                jsFileResponse = requests.get(url=jsRealPath, proxies=self.proxy_data, timeout=30, headers=header)
+            if jsFileResponse.status_code == 404:
+                count += 1
+            else:
+                with open("tmp" + os.sep + tag + "_" + host + os.sep + jsTag + "." + jsFilename, "wb") as js_file:
+                    js_file.write(jsFileResponse.content)
+                    js_file.close()
+            if count > len(jsRealPath) * 0.05:
+                modify = input("[!] 当前页面关联js超过5%页面不存在，是否进行baseURL手动调整(Y/N):")
+                if modify == 'Y' or modify == 'y':
+                    baseUrl = input("[!] 请输入新的BaseURL:")
+                    dealJs(jsPaths, baseUrl)
 
     def creatInsideJs(self, tag, host, jstag, scriptInside):  # 生成html的script的文件
         try:

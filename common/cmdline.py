@@ -12,7 +12,7 @@ class CommandLines():
                          help='Please Enter the extra HTTP head')
         parse.add_option('-b', '--base', dest='baseurl', type=str, help='Please enter the baseurl')
 
-        parse.add_option('-C', '--cache', dest='cache', default='on', type=str,
+        parse.add_option('-C', '--cache', dest='cache', default='off', type=str,
                          help='Please choose whether to save ths js files or not(on/off), defalut is off')
         parse.add_option('--rh', '--routehost', dest='routehost', type=str,
                          help='RouteHost like: https://pocsir.com:777/')
@@ -30,15 +30,6 @@ class CommandLines():
         # 自定义提取正则
         parse.add_option('-r', '--regex', dest='regex', type=str,
                          help='Please Enter your own Regx Rules, that string will spilt by \',\'')
-        # 自定义提取内容
-        parse.add_option('--pc', '--particularContent', dest='particularContent', default='off', type=str,
-                         help='Please enter the path of particular file')
-        # 自定义提取内容时需要确定项目路径，不填写则为生成新项目
-        parse.add_option('--pa', '--path', dest='path', type=str, help='Please enter the project path')
-        # 自定义检索关键字（正则+纯关键字）
-        parse.add_option('-k', '--keywords', dest='keywords', type=str,
-                         help='Please Enter the keywords that you want to search, that string will spilt by \',\'')
-        # parse.add_option('--st', '--sendtype', dest='sendtype', type=str, help='HTTP Request Type POST or GET')
         (options, args) = parse.parse_args()
         if options.mode == 'simple':
             if options.url is None:

@@ -63,25 +63,28 @@ class ParseJs():
         except Exception as e:
             print("[Err] %s" % e)
         try:
-            self.dealJs(self.jsPaths)
+            self.dealJs(self.jsPaths, None)
             print(Utils().tellTime() + "dealjs函数正常")
         except Exception as e:
             print("[Err] %s" % e)
 
-    def dealJs(self, js_paths):  # 生成js绝对路径
-        # todo 这段有问题
+    def dealJs(self, js_paths, baseUrl):  # 生成js绝对路径
+        # todo 这段有问题，baseURL进行了单层溯源，可能会是多层溯源，考虑多个baseURL
+        # todo 考虑分别接受前后端的自定义baseURL
+        # Create baseUrl
         res = urlparse(self.url)  # 处理url多余部分
-        if res.path == "":
-            baseUrl = res.scheme + "://" + res.netloc + "/"
-        else:
-            baseUrl = res.scheme + "://" + res.netloc + res.path
-            if res.path[-1:] != "/":  # 文件夹没"/",若输入的是文件也会被加上，但是影响不大
-                baseUrl = baseUrl + "/"
-        if self.url[-1:] != "/":  # 有文件的url
-            tmpPath = res.path.split('/')
-            tmpPath = tmpPath[:]  # 防止解析报错
-            del tmpPath[-1]
-            baseUrl = res.scheme + "://" + res.netloc + "/".join(tmpPath) + "/"
+        if baseUrl == "" or baseUrl is None:
+            if res.path == "":
+                baseUrl = res.scheme + "://" + res.netloc + "/"
+            else:
+                baseUrl = res.scheme + "://" + res.netloc + res.path
+                if res.path[-1:] != "/":  # 文件夹没"/",若输入的是文件也会被加上，但是影响不大
+                    baseUrl = baseUrl + "/"
+            if self.url[-1:] != "/":  # 有文件的url
+                tmpPath = res.path.split('/')
+                tmpPath = tmpPath[:]  # 防止解析报错
+                del tmpPath[-1]
+                baseUrl = res.scheme + "://" + res.netloc + "/".join(tmpPath) + "/"
         for jsPath in js_paths:  # 路径处理多种情况./ ../ / http
             if jsPath[:2] == "./":
                 jsPath = jsPath.replace("./", "")
@@ -118,9 +121,11 @@ class ParseJs():
         domain = res.netloc
         if ":" in domain:
             domain = str(domain).replace(":", "_")
-        DownloadJs(self.jsRealPaths, self.options).downloadJs(self.projectTag, domain, 0)
+        # todo count 404 进行人工介入审查
+        DownloadJs(self.jsRealPaths, self.options).downloadJs(self.projectTag, domain, 0, self.jsPaths)
 
     def scriptCrawling(self, demo):
+        # 将站点主入口作为string再次处理一遍，如果存在遗漏，则将主入口js作为文件保存到工作目录中，返回从中提取的其他js路径
         res = urlparse(self.url)
         domain = res.netloc
         if ":" in domain:

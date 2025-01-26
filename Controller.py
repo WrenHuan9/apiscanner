@@ -3,7 +3,6 @@ import sys
 
 from urllib.parse import urlparse
 
-from process import GlobelSearch, DeleteCache
 from process.BaseUrlCollect import BaseUrlCollect
 from process.CheckPacker import CheckPacker
 from process.FrontendUnauth import FrontendUnauth
@@ -34,6 +33,7 @@ class Project():
         os.mkdir(projectPath)
         projectPath = projectPath + os.sep
         print("[!] " + Utils().getMyWord("{project_path}") + os.path.abspath(projectPath))
+        # todo: console print log saved path
         # 下载js
         jsPaths = ParseJs(self.projectTag, self.url, self.options).parseJsStart()
         tmpJsPath = []
@@ -63,17 +63,8 @@ class Project():
         FrontendUnauth(projectPath, self.options).routeComplete(self.url)
         # api请求尝试（双方法+请求体都在这一步调整）
         ApiUnauth(projectPath, self.options).apiComplete(self.url)
-        # 敏感词检索
-        self.keyWordsSearch(projectPath, jsBaseURL)
-        # 保存本次扫描的参数配置
-        with open(projectPath + 'project.ini', 'a', encoding='utf-8', errors='ignore') as configFile:
-            print('[configuration]', file=configFile)
-            print('url=' + self.url, file=configFile)
-            print('ssl=' + self.options.ssl_flag, file=configFile)
-            print('proxy=' + self.options.proxy, file=configFile)
-            configFile.close()
 
-
+    # todo update tailored mode
     def parseStartWithCustomMode(self):
         # 自定义一定要指定工作目录
         if self.options.path is not None:
@@ -113,12 +104,6 @@ class Project():
         else:
             print("未指定工作目录，请以 --pa 或 --path 添加指定工作目录")
             sys.exit(0)
-
-    def keyWordsSearch(self, projectPath, jsBaseURL):
-        # 敏感词检索，直接提取存在的用户名密码
-        GlobelSearch.search(projectPath, self.options.keywords, jsBaseURL)
-        if self.options.cache == 'off':
-            DeleteCache.delete(projectPath)
 
     def run(self):
         if self.options.mode == 'simple':
